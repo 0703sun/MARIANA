@@ -1,44 +1,24 @@
-
 <?php
-require_once "conecta.php";
+//Incluindo o arquivo o arquivo de conexão nesse arquivo
+include "conecta.php";
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
+// Recebendo os dados do formulário
+$cpf = $_POST['cpf'];
+$senha = $_POST['senha'];
 
-    $cpf = $_POST["cpf"] ?? "";
-    $senha = $_POST["senha"] ?? "";
+// Consulta SQL insegura
+$sql = "SELECT * FROM cliente WHERE cpf = '$cpf' AND senha = '$senha'";
 
-    // Consulta preparada para evitar SQL Injection
-    $sql = "SELECT * FROM cliente
-            WHERE cpf = :cpf AND senha = :senha";
+try {
+    // Executando a consulta
+    $resultado = $conexao->query($sql);
 
-    $consulta = $conexao->prepare($sql);
-
-    $consulta->execute([
-        ":cpf" => $cpf,
-        ":senha" => $senha
-    ]);
-
-    $cliente = $consulta->fetch(PDO::FETCH_ASSOC);
-
-    if ($cliente) {
-
-        session_start();
-
-        $_SESSION["cliente"] = $cliente["nome"];
-        $_SESSION["cpf"] = $cliente["cpf"];
-
-        header("Location: lista.php");
-        exit();
-
+    if ( $linha = $resultado->fetch() ) { // fetch() retorna false se não tiver linhas
+        echo "Login bem-sucedido!";
     } else {
-
-        echo "<h2>CPF ou senha incorretos!</h2>";
-        echo '<a href="index.php">Voltar ao login</a>';
-
+        echo "CPF ou senha incorretos.";
     }
-
-} else {
-    header("Location: index.php");
-    exit();
+} catch (PDOException $e) {
+    echo "Erro ao executar consulta: " . $e->getMessage();
 }
 ?>
